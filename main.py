@@ -91,14 +91,28 @@ def encrypt(plain_text, key):
         cipher_text += ''.join(str(bit) for bit in permute(combined_text, FP))
     return cipher_text
 
+def decrypt(cipher_text, key):
+    plain_text = ''
+    sub_keys = generate_sub_keys(key)[::-1]
+    for block in break_into_64bit(cipher_text):
+        broken_text = permute(block, IP)
+        L = broken_text[:32]
+        R = broken_text[32:]
+        for K in sub_keys:
+            L, R = round(L, R, K)
+        combined_text = R + L
+        plain_text += ''.join(str(bit) for bit in permute(combined_text, FP))
+    return plain_text
+
+
 def format_text(text):
     text = hex_to_bin(text)
     return tuple(int(bit) for bit in text)
 
 def main():
 
-    m_choice = input("What format is  your text in? Enter 1-3\n1) Hex\n2) Int\n3) Bin\n4) ASCII\n   ")
-    k_choice = input("What format is  your key in? Enter 1-3\n1) Hex\n2) Int\n3) Bin\n4) ASCII\n   ")
+    m_choice = input("What format is  your text in? Enter 1-4\n1) Hex\n2) Int\n3) Bin\n4) ASCII\n   ")
+    k_choice = input("What format is  your key in? Enter 1-4\n1) Hex\n2) Int\n3) Bin\n4) ASCII\n   ")
     user_message = input("Enter your text: ")
     user_key = input("Enter your key: ")
     if m_choice == '1':
@@ -125,10 +139,32 @@ def main():
         print("Invalid choice for key format.")
         return
 
+    decryption_choice = input("Would you like to encrypt or decrypt?: ").lower()
+    if decryption_choice == 'decrypt':
+        plain_text = decrypt(plain_text, user_key)
+        plain_text_hex = hex(int(plain_text, 2))[2:].upper().zfill(16)
+        print(f"\nPlain Text (Hex): {plain_text_hex}")
 
-    cipher_text = encrypt(plain_text, user_key)
-    cipher_text_hex = hex(int(cipher_text, 2))[2:].upper().zfill(16)
-    print(f"\nCipher Text (Hex): {cipher_text_hex}")
+    elif decryption_choice == 'encrypt':
+        cipher_text = encrypt(plain_text, user_key)
+        cipher_text_hex = hex(int(cipher_text, 2))[2:].upper().zfill(16)
+        print(f"\nCipher Text (Hex): {cipher_text_hex}")
+
+    elif decryption_choice != 'encrypt' or 'decrypt':
+        print("Invalid choice. Please enter 'encrypt' or 'decrypt'.")
+
+
+    done_choice = input("\nWould you like to process another message? (yes/no): ").lower()
+    if done_choice == 'yes':
+        main()
+    elif done_choice == 'no':
+        print("\nExiting the program.\n")
+        return
+    else:
+        print("Invalid choice. Please enter 'yes' or 'no'.")
+        return
+
+
 
 
 
